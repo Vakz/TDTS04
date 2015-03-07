@@ -27,6 +27,7 @@ private:
   void modify_connection_type(std::string& request);
   void modify_request(std::string& request);
   void remove_encoding_header(std::string& request);
+  void remove_host_from_status(std::string& request);
   bool is_text_content(std::string const& request);
 
   std::vector<std::string> kBadWords

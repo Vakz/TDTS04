@@ -315,8 +315,15 @@ void Proxy::modify_connection_type(std::string& request)
 
 void Proxy::modify_request(std::string& request)
 {
+  remove_host_from_status(request);
   modify_connection_type(request);
   remove_encoding_header(request);
+}
+
+void Proxy::remove_host_from_status(std::string& request)
+{
+  std::regex pattern{"(GET )http://[\\w.]+[\\w]+(.*)"};
+  request = std::regex_replace(request, pattern, "$1$2");
 }
 
 void Proxy::remove_encoding_header(std::string& request)
