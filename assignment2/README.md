@@ -26,6 +26,7 @@ Compile with command:
 The proxy does not have any configuration alternatives other than changing the port on which it operates, unless you change the code itself. To use the proxy you first need to run a compiled version of it in the terminal, with the argument which is the portnumber. This number needs to be in the range 1025 – 65535.
 
 Requirement fulfillment
+--------------------------------
 
 Requirement 2: The proxy handles simple HTTP GET interactions between the client and a server. The request from the client is first handled in Proxy::listen_for_incoming, then handled in Proxy::handle_incoming_request, which determines if the URL is allowed or not. If it is, the clients request is forwarded to the request target in Proxy::send_to_client (with a somewhat misleading name).
 
