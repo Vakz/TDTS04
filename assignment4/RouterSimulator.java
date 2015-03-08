@@ -17,7 +17,7 @@ public class RouterSimulator {
   public static final int NUM_NODES = 3;
   public static final int INFINITY = 999;
 
-  public static final boolean LINKCHANGES = true;
+  public static final boolean LINKCHANGES = false;
 
   public int TRACE = 3;             /* for debugging */
 

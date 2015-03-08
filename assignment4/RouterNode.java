@@ -1,4 +1,5 @@
-import javax.swing.*;        
+import javax.swing.*;
+import java.util.*;
 
 public class RouterNode {
   private int myID;
@@ -7,6 +8,7 @@ public class RouterNode {
   final private boolean kPoisonReverse = true;
   private int[] costs = new int[RouterSimulator.NUM_NODES]; // Physical costs
   private int[] distance_vector = new int[RouterSimulator.NUM_NODES]; // Calculated distance vector
+  private HashMap<Integer, int[]> neighbor_table = new HashMap<Integer, int[]>();
   private int[] first_hop = new int[RouterSimulator.NUM_NODES]; // First hop for each path
 
   //--------------------------------------------------
@@ -34,18 +36,34 @@ public class RouterNode {
   //--------------------------------------------------
   public void recvUpdate(RouterPacket pkt) {
     boolean anything_changed = false;
+    if (pkt.sourceid != myID) neighbor_table.put(pkt.sourceid, pkt.mincost);
     for (int i = 0; i < RouterSimulator.NUM_NODES; ++i)
     {
       int distance_cost = costs[pkt.sourceid] + pkt.mincost[i];
-      if (distance_cost < distance_vector[i])
+      if (distance_cost > distance_vector[i] && first_hop[i] == pkt.sourceid)
       {
         distance_vector[i] = distance_cost;
-        first_hop[i] = pkt.sourceid;
+        handle_cost_increase();
+        anything_changed = true;
+      }
+      else if (distance_cost < distance_vector[i])
+      {
+        distance_vector[i] = distance_cost;
+        first_hop[i] = pkt.sourceid == myID ? i : pkt.sourceid;
         anything_changed = true;
       }
     }
 
     if (anything_changed) broadcastUpdates();
+  }
+
+  private void handle_cost_increase()
+  {
+    for(Integer key : neighbor_table.keySet())
+    {
+      RouterPacket p = new RouterPacket(key.intValue(), myID, neighbor_table.get(key));
+      recvUpdate(p);
+    }
   }
 
   private void broadcastUpdates()
@@ -116,7 +134,10 @@ public class RouterNode {
   //--------------------------------------------------
   public void updateLinkCost(int dest, int newcost) {
     costs[dest] = newcost;
+    distance_vector[dest] = newcost;
     RouterPacket pkt = new RouterPacket(myID, myID, costs);
+    handle_cost_increase();
+    
     recvUpdate(pkt);
   }
 
