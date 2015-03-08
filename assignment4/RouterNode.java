@@ -22,14 +22,14 @@ public class RouterNode {
     // the first hop of any route will be that neighbor.
     for (int i = 0; i < RouterSimulator.NUM_NODES; ++i)
     {
-      first_hop[i] = costs[i] == RouterSimulator.INFINITY ? myId : i;
+      first_hop[i] = costs[i] == RouterSimulator.INFINITY ? myID : i;
     }
     printDistanceTable();
     RouterPacket pkt = new RouterPacket(myID, 0, distance_vector);
     for (int i = 0; i < RouterSimulator.NUM_NODES; ++i)
     {
       // Don't send updates to non-neighbors or self
-      if (costs[i] == RouterSimulator.INIFINTY) continue;
+      if (costs[i] == RouterSimulator.INFINITY) continue;
       if (i == myID) continue;
       pkt.destid = i;
       sendUpdate(pkt);
@@ -41,9 +41,16 @@ public class RouterNode {
     boolean anything_changed = false;
     for (int i = 0; i < RouterSimulator.NUM_NODES; ++i)
     {
-      distance_cost = costs[pkt.sourceid] + pkt.mincosts[i];
+      int distance_cost = costs[pkt.sourceid] + pkt.mincost[i];
+      if(i ==  1)
+      {
+        myGUI.println(String.format("Pkt from %s", Integer.toString(pkt.sourceid)));
+        myGUI.println(String.format("Cost to 1: %s", Integer.toString(distance_cost)));
+      }
       if (distance_cost < distance_vector[i])
       {
+        myGUI.println(String.format("Calculated new route to %s at cost %s via node %s", Integer.toString(i),
+                                    Integer.toString(distance_cost), Integer.toString(pkt.sourceid)));
         distance_vector[i] = distance_cost;
         first_hop[i] = pkt.sourceid;
         anything_changed = true;
@@ -55,7 +62,7 @@ public class RouterNode {
       for (int i = 0; i < RouterSimulator.NUM_NODES; ++i)
       {
         // Don't send updates to non-neighbors or self
-        if (costs[i] == RouterSimulator.INIFINTY) continue;
+        if (costs[i] == RouterSimulator.INFINITY) continue;
         if (i == myID) continue;
         pkt.destid = i;
         sendUpdate(pkt);
@@ -67,7 +74,7 @@ public class RouterNode {
   //--------------------------------------------------
   private void sendUpdate(RouterPacket pkt) {
     // Never send updates to non-neighbors
-    if (costs[pkt.destid] == RouterSimulator.INIFINITY) break;
+    if (costs[pkt.destid] == RouterSimulator.INFINITY) return;
 
     /* If Poison Reverse is active, each node will receieve a unique copy of the distance vector,
      in order to set first hop to inifinity. If Poison Reverse is not active, this is simply not necessary,
@@ -76,9 +83,9 @@ public class RouterNode {
     if (kPoisonReverse)
     {
       int[] tempArray = new int[RouterSimulator.NUM_NODES];
-      for (int i = 0; i < RouterSimulator.NUM_NODES;  ++i)
+      for (int i = 0; i < RouterSimulator.NUM_NODES; ++i)
       {
-        tempArray[i] = (first_hop[i] == pkt.destid) ? RouterSimulator.INIFINITY : pkt.mincost[i];
+        tempArray[i] = (first_hop[i] == pkt.destid) ? RouterSimulator.INFINITY : pkt.mincost[i];
       }
       pkt.mincost = tempArray;
     }
@@ -96,14 +103,26 @@ public class RouterNode {
           String header = String.format("%8s |", "dist");
           for (int i = 0; i < RouterSimulator.NUM_NODES; ++i)
           {
-            header += String.Format("%8i ", i);
+            header += String.format("%8s", Integer.toString(i));
           }
           header += "\n";
-          for (int i = 0; i < RouterSimulator.NUM_NODES+1; ++i)
+          for (int i = 0; i < RouterSimulator.NUM_NODES+2; ++i)
           {
-            header += "--------";
+            header += "---------";
           }
           myGUI.println(header);
+          String line = String.format(" %-8s|", "cost");
+          for (int i = 0; i < RouterSimulator.NUM_NODES; ++i)
+          {
+            line += String.format("%8s", Integer.toString(distance_vector[i]));
+          }
+          myGUI.println(line);
+          line = String.format(" %-8s|", "route");
+          for (int i = 0; i < RouterSimulator.NUM_NODES; ++i)
+          {
+            line += String.format("%8s", Integer.toString(first_hop[i]));
+          }
+          myGUI.println(line + "\n\n");
   }
 
   //--------------------------------------------------
