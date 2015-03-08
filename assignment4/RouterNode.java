@@ -25,14 +25,9 @@ public class RouterNode {
       first_hop[i] = costs[i] == RouterSimulator.INFINITY ? myID : i;
     }
     printDistanceTable();
-    RouterPacket pkt = new RouterPacket(myID, 0, distance_vector);
     for (int i = 0; i < RouterSimulator.NUM_NODES; ++i)
     {
-      // Don't send updates to non-neighbors or self
-      if (costs[i] == RouterSimulator.INFINITY) continue;
-      if (i == myID) continue;
-      pkt.destid = i;
-      sendUpdate(pkt);
+      broadcastUpdates();
     }
   }
 
@@ -42,31 +37,29 @@ public class RouterNode {
     for (int i = 0; i < RouterSimulator.NUM_NODES; ++i)
     {
       int distance_cost = costs[pkt.sourceid] + pkt.mincost[i];
-      if(i ==  1)
-      {
-        myGUI.println(String.format("Pkt from %s", Integer.toString(pkt.sourceid)));
-        myGUI.println(String.format("Cost to 1: %s", Integer.toString(distance_cost)));
-      }
       if (distance_cost < distance_vector[i])
       {
-        myGUI.println(String.format("Calculated new route to %s at cost %s via node %s", Integer.toString(i),
-                                    Integer.toString(distance_cost), Integer.toString(pkt.sourceid)));
         distance_vector[i] = distance_cost;
         first_hop[i] = pkt.sourceid;
         anything_changed = true;
       }
     }
 
-    if (anything_changed)
+    if (anything_changed) broadcastUpdates();
+  }
+
+  private void broadcastUpdates()
+  {
+    for (int i = 0; i < RouterSimulator.NUM_NODES; ++i)
     {
-      for (int i = 0; i < RouterSimulator.NUM_NODES; ++i)
-      {
-        // Don't send updates to non-neighbors or self
-        if (costs[i] == RouterSimulator.INFINITY) continue;
-        if (i == myID) continue;
-        pkt.destid = i;
-        sendUpdate(pkt);
-      }
+      // Don't send updates to non-neighbors or self
+      if (costs[i] == RouterSimulator.INFINITY) continue;
+      if (i == myID) continue;
+      int[] tempArray = new int[RouterSimulator.NUM_NODES];
+      System.arraycopy(distance_vector, 0, tempArray, 0, RouterSimulator.NUM_NODES);
+      RouterPacket pkt = new RouterPacket(myID, i, tempArray);
+      
+      sendUpdate(pkt);
     }
   }
   
@@ -74,20 +67,15 @@ public class RouterNode {
   //--------------------------------------------------
   private void sendUpdate(RouterPacket pkt) {
     // Never send updates to non-neighbors
+    
     if (costs[pkt.destid] == RouterSimulator.INFINITY) return;
-
-    /* If Poison Reverse is active, each node will receieve a unique copy of the distance vector,
-     in order to set first hop to inifinity. If Poison Reverse is not active, this is simply not necessary,
-     and each node will just receieve a pointer to this' distance vector.
-    */
+    
     if (kPoisonReverse)
     {
-      int[] tempArray = new int[RouterSimulator.NUM_NODES];
       for (int i = 0; i < RouterSimulator.NUM_NODES; ++i)
       {
-        tempArray[i] = (first_hop[i] == pkt.destid) ? RouterSimulator.INFINITY : pkt.mincost[i];
+        if (first_hop[i] == pkt.destid) pkt.mincost[i] = RouterSimulator.INFINITY;
       }
-      pkt.mincost = tempArray;
     }
     
     sim.toLayer2(pkt);
