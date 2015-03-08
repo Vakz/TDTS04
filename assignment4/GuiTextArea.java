@@ -13,6 +13,8 @@ public class GuiTextArea {
 	frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	
 	myArea = new JTextArea(20, 40);
+	// Added this line because making tables in anything but monospace
+	// should be illegal
         myArea.setFont(new Font("monospaced", Font.PLAIN, 14));
 	myArea.setEditable(false);
 	JScrollPane scrollPane = 
