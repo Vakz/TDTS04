@@ -31,7 +31,8 @@ Requirement fulfillment
 Requirement 2: The proxy handles simple HTTP GET interactions between the client and a server. The request from the client is first handled in Proxy::listen_for_incoming, then handled in Proxy::handle_incoming_request, which determines if the URL is allowed or not. If it is, the clients request is forwarded to the request target in Proxy::send_to_client (with a somewhat misleading name).
 
 Requirement 3: URL Filtering is done in Proxy::allowed_url, using Filter::contains_bad_strings.
-Requirement 6: There is no browser-specific code. The proxy works for all tested browsers.
+
+Requirement 6: There is no browser-specific code. The proxy works for all tested browsers, although we have had limited ability to test for Internet Explorer.
 
 Requirement 7: This is done immediately on start, as the port is entered as an argument to the program.
 
