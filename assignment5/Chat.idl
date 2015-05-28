@@ -3,6 +3,11 @@ module ChatApp {
       void callback(in string message);
    };
    interface Chat {
-      string say(in ChatCallback objref, in string message);
+      void post(in ChatCallback cc, in string message);
+      void join(in ChatCallback cc, in string name);
+      void leave(in ChatCallback cc);
+      void list(in ChatCallback cc);
+      void game(in ChatCallback cc, in string marker);
+      void place(in ChatCallback cc, in string coords);
    };
 };
