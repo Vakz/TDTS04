@@ -124,13 +124,13 @@ public class ChatClient
         {
           System.out.println(error_marker);
         }
-        else if (command_words[0].toLowerCase().equals("x") ||
-          command_words[0].toLowerCase().equals("o"))
+        else if (!command_words[1].toLowerCase().equals("x") &&
+          !command_words[1].toLowerCase().equals("o"))
         {
             System.out.println(error_marker);
         }
         else{
-          chatImpl.game(cref, command_words[0]);
+          chatImpl.game(cref, command_words[1]);
         }
       break;
       case "place":

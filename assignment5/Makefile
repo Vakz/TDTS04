@@ -2,7 +2,7 @@
 #
 # Makefile - Java version
 #
-# use: make 
+# use: make
 # or:  make test
 #
 
@@ -16,7 +16,7 @@ IDLJ  = /usr/bin/idlj
 
 GENERATED = $(NAME)App
 
-all: 
+all:
 	-@ echo "  "
 	-@ echo "  make target             - build the project"
 	-@ echo "  make orbd|client|server - run the individual components"
@@ -30,17 +30,17 @@ clean:
 	-@rm -f *~ core
 
 clobber: clean
-	-@touch ./abc.class 
+	-@touch ./abc.class
 	-@rm -rf *.class $(GENERATED) orb.db
 
 idl::
-	-$(IDLJ) -fall $(NAME).idl	
+	-$(IDLJ) -fall $(NAME).idl
 
 c::
 	$(JAVAC) $(NAME)Client.java  $(NAME)App/*.java
 
 s::
-	$(JAVAC) $(NAME)Server.java $(NAME)App/*.java
+	$(JAVAC) $(NAME)Server.java $(NAME)App/*.java FiveInARow.java
 
 target::
 	make clobber
@@ -48,7 +48,7 @@ target::
 	make c
 	make s
 
-orbd:: 
+orbd::
 	-@echo "Starting orbd"
 	-@rm -rf ./orb.db
 	orbd -ORBInitialPort $(NAMESERVERPORT) -ORBInitialHost localhost
@@ -58,4 +58,3 @@ server::
 
 client::
 	$(JAVA) $(NAME)Client -ORBInitialPort $(NAMESERVERPORT) -ORBInitialHost localhost
-

@@ -7,11 +7,17 @@ import org.omg.PortableServer.POA;
 import java.util.HashMap;
 import java.util.Map;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 class ChatImpl extends ChatPOA
 {
     private ORB orb;
     private HashMap<ChatCallback, String> registered_users =
       new HashMap<ChatCallback, String>();
+    private HashMap<ChatCallback, Character> players =
+      new HashMap<ChatCallback, Character>();
+    private FiveInARow game = null;
 
     public void setORB(ORB orb_val) {
         orb = orb_val;
@@ -57,6 +63,7 @@ class ChatImpl extends ChatPOA
         return;
       }
       registered_users.remove(callobj);
+      players.remove(callobj);
       sendMsgAll(name + " has left the chat", true);
       sendMsg(callobj, "Bye " + name, true);
     }
@@ -73,12 +80,77 @@ class ChatImpl extends ChatPOA
 
     public void game(ChatCallback cc, String marker)
     {
-
+      if (!registered_users.containsKey(cc))
+      {
+        sendMsg(cc, "Must be registered on the server to play", true);
+        return;
+      }
+      if (game != null && !game.isOver() && players.containsKey(cc))
+      {
+        sendMsg(cc, "You are already playing", true);
+        return;
+      }
+      if (marker.length() == 0)
+      {
+        sendMsg(cc, "Must enter a marker to play as", true);
+      }
+      if (game == null || game.isOver())
+      {
+        game = new FiveInARow(8);
+      }
+      players.put(cc, marker.charAt(0));
+      sendMsg(cc, game.drawBoard(), false);
+      sendMsg(cc, "You are now playing with marker " + marker.charAt(0), true);
     }
 
     public void place(ChatCallback cc, String coords)
     {
+      if (!players.containsKey(cc))
+      {
+        sendMsg(cc, "You are not currently playing", true);
+        return;
+      }
+      if (game == null || game.isOver())
+      {
+        sendMsg(cc,
+          "Game not currently running. Type \"game <marker> \" to start a new round",
+          true
+        );
+        return;
+      }
 
+      Pattern p = Pattern.compile("^\\w\\d$");
+      Matcher m = p.matcher(coords);
+      if(!m.find())
+      {
+        sendMsg(cc, "Must enter coordinates (e.g. A0)", true);
+        return;
+      }
+      int col = Character.toUpperCase(coords.charAt(0)) - 'A';
+      int row = coords.charAt(1) - '0';
+
+      if(game.placeMarker(col, row, players.get(cc)))
+      {
+        sendMsgPlayers(game.drawBoard(), false);
+        if (game.isOver())
+        {
+          sendMsgPlayers("Game is over. Team " + game.getWinner() + " has won.",
+            true
+          );
+        }
+      }
+      else
+      {
+        sendMsg(cc, "Invalid coordinates", true);
+      }
+    }
+
+    private void sendMsgPlayers(String msg, boolean asSystem)
+    {
+      for (ChatCallback client : players.keySet())
+      {
+        sendMsg(client, msg, asSystem);
+      }
     }
 
     private void sendMsgAll(String msg, boolean systemMsg)
